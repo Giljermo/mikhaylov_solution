@@ -37,7 +37,7 @@ class MailYandexSender:
             with smtplib.SMTP_SSL('smtp.yandex.ru', 465) as smtp:  # Создаем объект SMTP
                 smtp.login(msg['From'], password)  # получаем доступ
                 smtp.send_message(msg)  # отправляем сообщение
-                self.logger.info(f'Собщение с файлом и текстом: {message_text}\n отправлено на почту {msg["To"]}')
+                self.logger.info(f'Собщение с файлом "{file_name}" и текстом: "{message_text}"\n отправлено на почту {msg["To"]}')
         except SMTPAuthenticationError as err:
             self.logger.info(f'Возникла ошибка при подклчении к почтовому клиенту:\n{err}')
 
