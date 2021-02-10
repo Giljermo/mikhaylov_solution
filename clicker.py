@@ -1,3 +1,5 @@
+from my_loger import logger
+
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -5,6 +7,22 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import ElementClickInterceptedException
+from selenium.common.exceptions import WebDriverException
+
+
+def error_logger_decorator(func):
+    """
+    Чтобы исключить повторение кода в нескольких местах воспользуемся возможностями декораторов для логирования ошибок.
+    Функция-декоратор добавляет дополнительный функционал к методам класса,
+    в данном случае добавляет запись в журнал при возникновении ошибок и завершает выполнение программы
+    """
+    def wraper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except (TimeoutException, ElementClickInterceptedException, WebDriverException) as err:
+            logger.info(f'При выполнении функции {func.__name__} произошла ошибка: {err}')
+            exit()
+    return wraper
 
 
 class ChromeHandler:
@@ -15,38 +33,31 @@ class ChromeHandler:
     """
     ignored_exceptions = (NoSuchElementException, StaleElementReferenceException,)
 
-    def __init__(self, driver, logger):
-        self.logger = logger
+    def __init__(self, driver):
         self.driver = driver
         # устанавливаем ожидание загрузки элементов сайта на 20 секунд
         self.wait = WebDriverWait(driver, timeout=20, ignored_exceptions=self.ignored_exceptions)
 
+    @error_logger_decorator
     def open_site(self, site):
         """
         Открываем сайт на весь экран
         """
-        try:
-            self.driver.get(site)
-            self.driver.maximize_window()
-        except (TimeoutException, ElementClickInterceptedException) as err:
-            self.logger.info(f'При открытии сайта произошла ошибка {err}.')
+        self.driver.get(site)
+        self.driver.maximize_window()
 
+    @error_logger_decorator
     def get_dom_element(self, css_selector, filter_=None):
         """
         :param css_selector: селектор для выбора необходимого элемента
         :param filter_: если у элементов нет атрибутов, мыберем их все и фильтруем по содержанию text у элемента
         :return: функция возвращает елемент по заданному селектору
         """
-        try:
-            if filter_:
-                elements = self.wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, css_selector)))
-                return [element for element in elements if element.text == filter_][0]
-            else:
-                return self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, css_selector)))
-        except (TimeoutException, ElementClickInterceptedException) as err:
-            self.logger.info(f'При поиске элемента с селектором "{css_selector}" '
-                             f'возникла ошибка {err} Превышено время ожидания или совершен клик на сайте.')
-            exit()
+        if filter_:
+            elements = self.wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, css_selector)))
+            return [element for element in elements if element.text == filter_][0]
+        else:
+            return self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, css_selector)))
 
     def _set_currency(self, currency):
         """
