@@ -9,7 +9,7 @@ import pandas as pd
 
 
 # Обьявляю константые значения
-URL_MOEX = r'https://www.mo12321ex.com'
+URL_MOEX = r'https://www.moex.com'
 BTN_MENU_SELECTOR = "nav.header-menu > span"  # Селектор для получения элемента кнопки меню
 DERIVATIVE_MARKET_SELECTOR = "div.item > a"  # Селектор для получения элемента "срочный рынок"
 AGREEMENT_SELECTOR = 'div.disclaimer__buttons > a'  # Селектор для получения элемента "согласен"
@@ -27,7 +27,7 @@ logger = get_logger()
 
 # создаем driver в контекстном менеджере для автоматического закрытия после использования
 with webdriver.Chrome() as driver:
-    chrome_handler = ChromeHandler(driver)  # создаем экземпляр класса
+    chrome_handler = ChromeHandler(driver, logger)  # создаем экземпляр класса
     chrome_handler.open_site(URL_MOEX)  # открываем сайт
     chrome_handler.get_dom_element(BTN_MENU_SELECTOR).click()  # Нажимаем на кнопку меню
     # Из выпадающего списка переходим на "срочный рынок"
@@ -54,4 +54,3 @@ count_rows = handler.count_rows()
 
 sender = MailYandexSender(logger)
 sender.send_message(EXCEL_FILE_NAME, count_rows)
-logger.info('Программа успешно завершила свою работу.')
