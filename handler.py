@@ -46,7 +46,7 @@ class DataHandler:
         """
         [self.ws.write(0, index, title) for index, title in enumerate(self.dataframe.columns)]
 
-    def _fill_data_to_excel(self, row, col, format_):
+    def _write_data_to_excel(self, row, col, format_):
         """
         Функция записывает значение по строке и столбцу в excel в выбранном формате,
         пропуская заголовок, используется внутри класса.
@@ -65,12 +65,12 @@ class DataHandler:
             self._fill_columns_name_to_excel()  # записать заголовки
 
             max_row, _ = self.dataframe.shape  # число строк во фрейме
-            for row_ind in range(max_row):
-                for col_ind, title in enumerate(self.dataframe.columns):
+            for row_ind in range(max_row):  # итерируемся по числу строк
+                for col_ind, title in enumerate(self.dataframe.columns):  # итерируемся по столбцам
                     if title in ['Курс usd', 'Курс eur', 'Изменение eur', 'Изменение usd']:
-                        self._fill_data_to_excel(row_ind, col_ind, self.financial_format)
+                        self._write_data_to_excel(row_ind, col_ind, self.financial_format)
                     else:
-                        self._fill_data_to_excel(row_ind, col_ind, self.numerical_format)
+                        self._write_data_to_excel(row_ind, col_ind, self.numerical_format)
         except Exception as err:
             self.logger.info(f'При сохранении файла возникла непредвиденная ошибка: {err}')
 

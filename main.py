@@ -18,15 +18,14 @@ EUR_CURRENCY = 'EUR/RUB - Евро к российскому рублю'  # на
 USD_CURRENCY = 'USD/RUB - Доллар США к российскому рублю'  # наименование валюты доллара
 EXCEL_FILE_NAME = 'currency_rates.xlsx'
 
+logger = get_logger()  # создаю логер
 dict_currency_rates = {}  # словарь для хранеия курсов валют евро и доллара
-
 chromedriver_autoinstaller.install()  # установить драйвер если его нет
-
-
-logger = get_logger()
+options = webdriver.ChromeOptions()  # отключаем лишние уведомления чтобы не захламлять терминал
+options.add_experimental_option('excludeSwitches', ['enable-logging'])
 
 # создаем driver в контекстном менеджере для автоматического закрытия после использования
-with webdriver.Chrome() as driver:
+with webdriver.Chrome(options=options) as driver:
     chrome_handler = ChromeHandler(driver, logger)  # создаем экземпляр класса
     chrome_handler.open_site(URL_MOEX)  # открываем сайт
     chrome_handler.get_dom_element(BTN_MENU_SELECTOR).click()  # Нажимаем на кнопку меню
@@ -51,6 +50,5 @@ with writer.book as workbook:
     handler.save_dataframe_to_excel()
 
 count_rows = handler.count_rows()
-
 sender = MailYandexSender(logger)
 sender.send_message(EXCEL_FILE_NAME, count_rows)
