@@ -11,13 +11,13 @@ class ChromeHandler:
     """
     Класс обработчик используется для взаимодействия с браузером Chrome.
     может открывать сайт, вернуть элемент по css селектору для клика,
-    вернуть распарсенные данный с сайта в виде словаря
+    вернуть распарсенные данные с сайта в виде словаря
     """
     ignored_exceptions = (NoSuchElementException, StaleElementReferenceException,)
 
     def __init__(self, driver, logger):
         self.logger = logger
-        self.driver = driver  # драйвер для работы с браузером
+        self.driver = driver
         # устанавливаем ожидание загрузки элементов сайта на 20 секунд
         self.wait = WebDriverWait(driver, timeout=20, ignored_exceptions=self.ignored_exceptions)
 
@@ -68,9 +68,10 @@ class ChromeHandler:
         """
         self._set_currency(currency)  # переключаем выпадающий список на "currency"
         dict_currency = {}  # словарь для хранения даты и курса валюты
+        # получаем елемент таблицы курсов валют
         table_exchange_rates = self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, "table.tablels")))
-        for row_tr in table_exchange_rates.find_elements_by_css_selector('tr'):
-            row_td = row_tr.find_elements_by_tag_name('td')
+        for row_tr in table_exchange_rates.find_elements_by_css_selector('tr'):  # итерируемся по строкам таблицы
+            row_td = row_tr.find_elements_by_tag_name('td')  # находим елементы столбцов
             try:
                 if row_td:
                     date = row_td[0].text  # в 0-ом столбце содержится дата

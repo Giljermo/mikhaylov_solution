@@ -15,5 +15,3 @@ def get_logger():
     # добавляю обработчик в логер
     logger.info('Запуск логирования.')
     return logger
-
-
