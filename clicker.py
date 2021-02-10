@@ -5,25 +5,6 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import ElementClickInterceptedException
-from my_loger import get_logger
-
-
-logger = get_logger()
-
-
-def error_logger_decorator(func):
-    """
-    Чтобы не дублировать в каждом метоте класа try...except
-    создадим декоратор и применим его к методам.
-    Декоратор добавляет запись в лог если возникают исключения
-    Exception, TimeoutException, ElementClickInterceptedException
-    """
-    def wraper(*args, **kwargs):
-        try:
-            func(*args, **kwargs)
-        except (Exception, TimeoutException, ElementClickInterceptedException) as err:
-            logger.info(f'При выполнении функции {func.__name__} произошла ошибка {err}')
-    return wraper
 
 
 class ChromeHandler:
@@ -34,44 +15,49 @@ class ChromeHandler:
     """
     ignored_exceptions = (NoSuchElementException, StaleElementReferenceException,)
 
-    def __init__(self, driver):
+    def __init__(self, driver, logger):
+        self.logger = logger
         self.driver = driver  # драйвер для работы с браузером
         # устанавливаем ожидание загрузки элементов сайта на 20 секунд
         self.wait = WebDriverWait(driver, timeout=20, ignored_exceptions=self.ignored_exceptions)
 
-    @error_logger_decorator
     def open_site(self, site):
         """
         Открываем сайт на весь экран
         """
-        self.driver.get(site)
-        self.driver.maximize_window()
+        try:
+            self.driver.get(site)
+            self.driver.maximize_window()
+        except (TimeoutException, ElementClickInterceptedException) as err:
+            self.logger.info(f'При открытии сайта произошла ошибка {err}.')
 
-    @error_logger_decorator
     def get_dom_element(self, css_selector, filter_=None):
         """
         :param css_selector: селектор для выбора необходимого элемента
         :param filter_: если у элементов нет атрибутов, мыберем их все и фильтруем по содержанию text у элемента
         :return: функция возвращает елемент по заданному селектору
         """
-        if filter_:
-            elements = self.wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, css_selector)))
-            return [element for element in elements if element.text == filter_][0]
-        else:
-            return self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, css_selector)))
+        try:
+            if filter_:
+                elements = self.wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, css_selector)))
+                return [element for element in elements if element.text == filter_][0]
+            else:
+                return self.wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, css_selector)))
+        except (TimeoutException, ElementClickInterceptedException) as err:
+            self.logger.info(f'При поиске элемента с селектором "{css_selector}" '
+                             f'возникла ошибка {err} Превышено время ожидания или совершен клик на сайте.')
+            exit()
 
-    @error_logger_decorator
     def _set_currency(self, currency):
         """
-        данная функцию меняет валюту в выпадающем списке страницы на значение "currency"
-        ее будут использовать только методы класса
+        данная метод меняет валюту в выпадающем списке страницы на значение "currency".
+        предназначен для использования внутри класса
         :param currency: наименование валюты
         """
         cur_elem = self.wait.until(EC.visibility_of_element_located((By.NAME, "ctl00$PageContent$CurrencySelect")))
         cur_elem.send_keys(currency)
         self.wait.until(EC.visibility_of_element_located((By.NAME, "bSubmit"))).click()
 
-    @error_logger_decorator
     def get_currency_exchange_rates_from_html_table(self, currency):
         """
         Функция парсинга html таблицы для получения курса валюты.
