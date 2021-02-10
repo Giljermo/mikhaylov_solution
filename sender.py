@@ -1,4 +1,5 @@
 import smtplib
+from smtplib import SMTPAuthenticationError
 import pymorphy2
 from email.message import EmailMessage
 
@@ -32,11 +33,13 @@ class MailYandexSender:
         file = self.get_file(file_name)  # получаем файл для отправки
         # крепим файл к объекту письма
         msg.add_attachment(file, maintype='application', subtype='octet-stream', filename=file_name)
-
-        with smtplib.SMTP_SSL('smtp.yandex.ru', 465) as smtp:  # Создаем объект SMTP
-            smtp.login(msg['From'], password)  # получаем доступ
-            smtp.send_message(msg)  # отправляем сообщение
-            self.logger.info(f'Собщение с текстом: {message_text}\n успешно отправлено на почту {msg["To"]}')
+        try:
+            with smtplib.SMTP_SSL('smtp.yandex.ru', 465) as smtp:  # Создаем объект SMTP
+                smtp.login(msg['From'], password)  # получаем доступ
+                smtp.send_message(msg)  # отправляем сообщение
+                self.logger.info(f'Собщение с файлом и текстом: {message_text}\n успешно отправлено на почту {msg["To"]}')
+        except SMTPAuthenticationError as err:
+            self.logger.info(f'Возникла ошибка при подклчении к почтовому клиенту:\n{err}')
 
     def get_file(self, file_name):
         """
