@@ -1,7 +1,7 @@
 from clicker import ChromeHandler
 from handler import DataHandler
 from sender import MailYandexSender
-from my_loger import get_logger
+from my_loger import logger
 
 from selenium import webdriver
 import chromedriver_autoinstaller
@@ -18,7 +18,6 @@ EUR_CURRENCY = 'EUR/RUB - Евро к российскому рублю'  # на
 USD_CURRENCY = 'USD/RUB - Доллар США к российскому рублю'  # наименование валюты доллара
 EXCEL_FILE_NAME = 'currency_rates.xlsx'
 
-logger = get_logger()  # создаю логер
 dict_currency_rates = {}  # словарь для хранеия курсов валют евро и доллара
 chromedriver_autoinstaller.install()  # установить драйвер если его нет
 options = webdriver.ChromeOptions()  # отключаем лишние уведомления чтобы не захламлять терминал
@@ -26,7 +25,7 @@ options.add_experimental_option('excludeSwitches', ['enable-logging'])
 
 # создаем driver в контекстном менеджере для автоматического закрытия после использования
 with webdriver.Chrome(options=options) as driver:
-    chrome_handler = ChromeHandler(driver, logger)  # создаем экземпляр класса
+    chrome_handler = ChromeHandler(driver)  # создаем экземпляр класса
     chrome_handler.open_site(URL_MOEX)  # открываем сайт
     chrome_handler.get_dom_element(BTN_MENU_SELECTOR).click()  # Нажимаем на кнопку меню
     # Из выпадающего списка переходим на "срочный рынок"
